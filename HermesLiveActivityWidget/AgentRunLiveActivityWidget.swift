@@ -55,15 +55,20 @@ private struct AgentRunExpandedIslandBottomView: View {
 
     /// One line without reply text: what the agent is doing, then its counts.
     private var countsLine: String {
-        let lead = isBot && state.isStale ? String(localized: "Not connected") : state.currentActivity
-        return ([lead] + (state.chips ?? [])).joined(separator: " · ")
+        AgentRunStaleBotPresentation.expandedCountsLine(state: state, isBot: isBot)
+    }
+
+    /// A stale approval or clarification keeps its ask in this line. Every other
+    /// state still yields the line to reply text.
+    private var showsStaleWaitingAnswer: Bool {
+        AgentRunStaleBotPresentation.prefersWaitingAnswer(state: state, isBot: isBot)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             AgentRunProgressRail(status: state.status)
 
-            if state.responseExcerpt.isEmpty {
+            if state.responseExcerpt.isEmpty || showsStaleWaitingAnswer {
                 Text(countsLine)
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(AgentRunLiveActivityTheme.secondaryText)
@@ -91,7 +96,9 @@ private struct AgentRunLockScreenView: View {
         VStack(alignment: .leading, spacing: 10) {
             header
             activityProgressRow(progressWidth: 112)
-            if isBot, context.presentedState.responseExcerpt.isEmpty, !botChips.isEmpty {
+            // A stale ask stays on the chips, including its answer action, even when
+            // reply text would otherwise take this row. Counts stay counts.
+            if isBot, (showsStaleWaitingAnswer || context.presentedState.responseExcerpt.isEmpty), !botChips.isEmpty {
                 AgentRunChipRow(chips: botChips.map(AgentRunDetailChip.text), isDimmed: context.presentedState.isStale)
             } else if !isBot, context.presentedState.responseExcerpt.isEmpty {
                 // No reply text to show: the relay's counts and freshness, or nothing
@@ -110,9 +117,13 @@ private struct AgentRunLockScreenView: View {
     private var isBot: Bool { context.attributes.bot != nil }
 
     private var activityText: String {
+        if let stale = AgentRunStaleBotPresentation.presentation(state: context.presentedState, isBot: isBot) {
+            return stale.lead
+        }
+
         if context.presentedState.isStale {
-            // A bot's socket closes with the app, so say that rather than imply freshness.
-            return isBot ? String(localized: "Not connected") : "Latest status shown"
+            // Stale webui names the card as stale. A disconnected Bot is handled above.
+            return "Latest status shown"
         }
 
         if let errorSummary = context.presentedState.errorSummary, !errorSummary.isEmpty {
@@ -122,10 +133,13 @@ private struct AgentRunLockScreenView: View {
         return context.presentedState.currentActivity
     }
 
-    /// The bot's counts; a stale activity adds the way back in.
+    /// The bot's counts. A stale activity adds one action: answer, or reconnect.
     private var botChips: [String] {
-        let chips = context.presentedState.chips ?? []
-        return context.presentedState.isStale ? chips + [String(localized: "Open to reconnect")] : chips
+        AgentRunStaleBotPresentation.lockScreenChips(state: context.presentedState, isBot: isBot)
+    }
+
+    private var showsStaleWaitingAnswer: Bool {
+        AgentRunStaleBotPresentation.prefersWaitingAnswer(state: context.presentedState, isBot: isBot)
     }
 
     private var header: some View {

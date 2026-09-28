@@ -622,3 +622,55 @@ enum AgentRunActivityStateReducer {
         )
     }
 }
+
+/// Stale Bot copy on the Lock Screen and expanded island (#813).
+/// Approval and clarification keep that ask after the socket drops. Every other
+/// stale Bot still says it is disconnected. Fresh Bots and webui runs return nil,
+/// so each surface keeps its own lead.
+enum AgentRunStaleBotPresentation {
+    struct Copy: Equatable {
+        var lead: String
+        var action: String
+        /// True only for the two pending asks. The expanded counts line adds
+        /// `action` then; other stale Bots keep the lead and their counts.
+        var isPendingInput: Bool
+    }
+
+    static func presentation(state: AgentRunActivityAttributes.ContentState, isBot: Bool) -> Copy? {
+        guard isBot, state.isStale else { return nil }
+        switch state.status {
+        case .waitingForApproval, .waitingForClarification:
+            return Copy(lead: state.status.title,
+                        action: String(localized: "Open to answer"),
+                        isPendingInput: true)
+        default:
+            return Copy(lead: String(localized: "Not connected"),
+                        action: String(localized: "Open to reconnect"),
+                        isPendingInput: false)
+        }
+    }
+
+    /// Existing counts, plus exactly one action while the Bot is stale.
+    static func lockScreenChips(state: AgentRunActivityAttributes.ContentState, isBot: Bool) -> [String] {
+        let counts = state.chips ?? []
+        guard let stale = presentation(state: state, isBot: isBot) else { return counts }
+        return counts + [stale.action]
+    }
+
+    /// The activity lead, then its counts. A pending ask also names how to answer.
+    /// Reply text stays out of this line.
+    static func expandedCountsLine(state: AgentRunActivityAttributes.ContentState, isBot: Bool) -> String {
+        let stale = presentation(state: state, isBot: isBot)
+        var parts = [stale?.lead ?? state.currentActivity] + (state.chips ?? [])
+        if let stale, stale.isPendingInput {
+            parts.append(stale.action)
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    /// A stale Bot waiting on approval or clarification keeps that ask on both
+    /// surfaces instead of letting reply text replace it.
+    static func prefersWaitingAnswer(state: AgentRunActivityAttributes.ContentState, isBot: Bool) -> Bool {
+        presentation(state: state, isBot: isBot)?.isPendingInput == true
+    }
+}

@@ -428,6 +428,211 @@ import XCTest
         XCTAssertNil(AgentRunActivityAvatarFile.url(named: "../escape.png"))
         XCTAssertNil(AgentRunActivityAvatarFile.url(named: nil))
     }
+
+    // MARK: Stale waiting presentation (#813)
+
+    func testStaleBotPresentationSelectsOnlyPendingInput() {
+        let counts = ["Plan 2 of 5", "2 workers"]
+        let unrelated = "Sketching a diagram"
+        let answer = String(localized: "Open to answer")
+        let disconnected = String(localized: "Not connected")
+        let reconnect = String(localized: "Open to reconnect")
+
+        for status in AgentRunActivityStatus.allCases {
+            for isStale in [false, true] {
+                for isBot in [false, true] {
+                    let state = activityState(status: status, isStale: isStale, currentActivity: unrelated, chips: counts)
+                    let stale = AgentRunStaleBotPresentation.presentation(state: state, isBot: isBot)
+                    let pending = isBot && isStale
+                        && (status == .waitingForApproval || status == .waitingForClarification)
+                    let where_ = "\(status) stale=\(isStale) bot=\(isBot)"
+
+                    if pending {
+                        XCTAssertEqual(stale?.lead, status.title, where_)
+                        XCTAssertNotEqual(stale?.lead, state.currentActivity, where_)
+                        XCTAssertEqual(stale?.action, answer, where_)
+                        XCTAssertEqual(stale?.isPendingInput, true, where_)
+                    } else if isBot && isStale {
+                        XCTAssertEqual(stale?.lead, disconnected, where_)
+                        XCTAssertEqual(stale?.action, reconnect, where_)
+                        XCTAssertEqual(stale?.isPendingInput, false, where_)
+                    } else {
+                        XCTAssertNil(stale, where_)
+                    }
+
+                    let chips = AgentRunStaleBotPresentation.lockScreenChips(state: state, isBot: isBot)
+                    if isBot && isStale, let action = stale?.action {
+                        XCTAssertEqual(chips, counts + [action], where_)
+                        XCTAssertEqual(chips.filter { $0 == action }.count, 1, where_)
+                    } else {
+                        XCTAssertEqual(chips, counts, where_)
+                    }
+
+                    let line = AgentRunStaleBotPresentation.expandedCountsLine(state: state, isBot: isBot)
+                    if pending {
+                        XCTAssertEqual(line, ([status.title] + counts + [answer]).joined(separator: " · "), where_)
+                    } else if isBot && isStale {
+                        XCTAssertEqual(line, ([disconnected] + counts).joined(separator: " · "), where_)
+                    } else {
+                        XCTAssertEqual(line, ([unrelated] + counts).joined(separator: " · "), where_)
+                    }
+                    XCTAssertEqual(AgentRunStaleBotPresentation.prefersWaitingAnswer(state: state, isBot: isBot), pending, where_)
+                }
+            }
+        }
+    }
+
+    func testStalePendingInputKeepsItsAskBesideCountsErrorsAndExcerpts() {
+        let answer = String(localized: "Open to answer")
+        for status in [AgentRunActivityStatus.waitingForApproval, .waitingForClarification] {
+            for currentActivity in ["", "not the ask"] {
+                for counts: [String]? in [nil, [], ["Plan 2 of 5"]] {
+                    var state = activityState(
+                        status: status, isStale: true, currentActivity: currentActivity, chips: counts,
+                        excerpt: "hidden reply", errorSummary: "boom")
+                    let stale = AgentRunStaleBotPresentation.presentation(state: state, isBot: true)
+                    XCTAssertEqual(stale?.lead, status.title)
+                    XCTAssertNotEqual(stale?.lead, state.currentActivity)
+                    XCTAssertNotEqual(stale?.lead, state.errorSummary)
+                    let shownCounts = counts ?? []
+                    let chips = AgentRunStaleBotPresentation.lockScreenChips(state: state, isBot: true)
+                    XCTAssertEqual(chips, shownCounts + [answer])
+                    XCTAssertEqual(chips.filter { $0 == answer }.count, 1)
+                    XCTAssertFalse(chips.contains("hidden reply"))
+                    let line = AgentRunStaleBotPresentation.expandedCountsLine(state: state, isBot: true)
+                    XCTAssertEqual(line, ([status.title] + shownCounts + [answer]).joined(separator: " · "))
+                    XCTAssertFalse(line.contains("hidden reply"))
+                    XCTAssertTrue(AgentRunStaleBotPresentation.prefersWaitingAnswer(state: state, isBot: true))
+
+                    state.isStale = false
+                    XCTAssertNil(AgentRunStaleBotPresentation.presentation(state: state, isBot: true))
+                    XCTAssertEqual(AgentRunStaleBotPresentation.lockScreenChips(state: state, isBot: true), shownCounts)
+                    XCTAssertFalse(AgentRunStaleBotPresentation.prefersWaitingAnswer(state: state, isBot: true))
+                    XCTAssertEqual(
+                        AgentRunStaleBotPresentation.expandedCountsLine(state: state, isBot: true),
+                        ([state.currentActivity] + shownCounts).joined(separator: " · "))
+                }
+            }
+        }
+    }
+
+    /// Generic waiting, in-flight work, and final or failed runs stay on the
+    /// disconnected card. Stopping is a conversation turn, not an activity status:
+    /// the card keeps the mapped command line and does not become an ask.
+    func testOrdinaryStaleBotsStayDisconnected() {
+        let disconnected = String(localized: "Not connected")
+        let reconnect = String(localized: "Open to reconnect")
+        let counts = ["1 tool"]
+        let cases: [(AgentRunActivityStatus, String, String?, Bool)] = [
+            (.waiting, String(localized: "Waiting for you"), nil, false),
+            (.runningCommand, String(localized: "Running command"), nil, false),
+            (.usingTool, String(localized: "Using tool"), nil, false),
+            (.thinking, String(localized: "Thinking"), nil, false),
+            (.searchingFiles, String(localized: "Searching files"), nil, false),
+            (.complete, String(localized: "Response complete"), nil, true),
+            (.failed, String(localized: "Response failed"), "boom", true),
+            (.cancelled, String(localized: "Response cancelled"), nil, true),
+        ]
+        for (status, activity, error, isFinal) in cases {
+            let state = activityState(
+                status: status, isStale: true, currentActivity: activity, chips: counts,
+                excerpt: "hidden reply", errorSummary: error, isFinal: isFinal)
+            let stale = AgentRunStaleBotPresentation.presentation(state: state, isBot: true)
+            XCTAssertEqual(stale?.lead, disconnected, "\(status)")
+            XCTAssertEqual(stale?.action, reconnect, "\(status)")
+            XCTAssertEqual(stale?.isPendingInput, false, "\(status)")
+            XCTAssertEqual(AgentRunStaleBotPresentation.lockScreenChips(state: state, isBot: true), counts + [reconnect])
+            XCTAssertEqual(
+                AgentRunStaleBotPresentation.expandedCountsLine(state: state, isBot: true),
+                ([disconnected] + counts).joined(separator: " · "), "\(status)")
+            XCTAssertFalse(AgentRunStaleBotPresentation.prefersWaitingAnswer(state: state, isBot: true), "\(status)")
+        }
+
+        let freshFailure = activityState(
+            status: .failed, isStale: false, currentActivity: String(localized: "Response failed"),
+            errorSummary: "boom", isFinal: true)
+        XCTAssertNil(AgentRunStaleBotPresentation.presentation(state: freshFailure, isBot: true))
+        XCTAssertNil(AgentRunStaleBotPresentation.presentation(state: freshFailure, isBot: false))
+        let staleWebuiAsk = activityState(
+            status: .waitingForApproval, isStale: true, currentActivity: "Sketching a diagram", chips: counts)
+        XCTAssertNil(AgentRunStaleBotPresentation.presentation(state: staleWebuiAsk, isBot: false))
+        XCTAssertEqual(
+            AgentRunStaleBotPresentation.expandedCountsLine(state: staleWebuiAsk, isBot: false),
+            (["Sketching a diagram"] + counts).joined(separator: " · "))
+        XCTAssertFalse(AgentRunStaleBotPresentation.prefersWaitingAnswer(state: staleWebuiAsk, isBot: false))
+    }
+
+    func testStalePresentationDoesNotMutateActivityState() throws {
+        let started = Date(timeIntervalSince1970: 1_800_000_000)
+        let updated = Date(timeIntervalSince1970: 1_800_000_042)
+        var state = activityState(
+            status: .waitingForClarification, isStale: true, currentActivity: "unrelated",
+            chips: ["2 workers"], excerpt: "Ask which inbox", errorSummary: "boom",
+            started: started, updated: updated)
+        let encoded = try JSONEncoder().encode(state)
+        let snapshot = state
+        _ = AgentRunStaleBotPresentation.presentation(state: state, isBot: true)
+        _ = AgentRunStaleBotPresentation.lockScreenChips(state: state, isBot: true)
+        _ = AgentRunStaleBotPresentation.expandedCountsLine(state: state, isBot: true)
+        _ = AgentRunStaleBotPresentation.prefersWaitingAnswer(state: state, isBot: true)
+        XCTAssertEqual(state, snapshot)
+        XCTAssertTrue(state.isStale)
+        XCTAssertEqual(state.startedAt, started)
+        XCTAssertEqual(state.updatedAt, updated)
+        XCTAssertEqual(state.status, .waitingForClarification)
+        XCTAssertEqual(state.responseExcerpt, "Ask which inbox")
+        XCTAssertEqual(state.chips, ["2 workers"])
+        XCTAssertEqual(try decodedActivity(JSONEncoder().encode(state)), try decodedActivity(encoded))
+
+        // The widget reads presented state: ActivityKit staleness counts, the stored value does not change.
+        var stored = state
+        stored.isStale = false
+        let storedEncoded = try JSONEncoder().encode(stored)
+        let attributes = AgentRunActivityAttributes(
+            sessionID: stored.sessionID, sessionTitle: stored.sessionTitle, startedAt: started)
+        let presented = stored.presented(attributes: attributes, systemIsStale: true)
+        XCTAssertEqual(try decodedActivity(JSONEncoder().encode(stored)), try decodedActivity(storedEncoded))
+        XCTAssertFalse(stored.isStale)
+        XCTAssertEqual(stored.status, .waitingForClarification)
+        XCTAssertEqual(stored.responseExcerpt, state.responseExcerpt)
+        XCTAssertTrue(presented.isStale)
+        XCTAssertEqual(
+            AgentRunStaleBotPresentation.presentation(state: presented, isBot: true)?.lead,
+            AgentRunActivityStatus.waitingForClarification.title)
+        XCTAssertNil(AgentRunStaleBotPresentation.presentation(state: stored, isBot: true))
+        XCTAssertNil(AgentRunStaleBotPresentation.presentation(state: presented, isBot: false))
+    }
+
+    private func activityState(
+        status: AgentRunActivityStatus,
+        isStale: Bool,
+        currentActivity: String,
+        chips: [String]? = nil,
+        excerpt: String = "",
+        errorSummary: String? = nil,
+        isFinal: Bool = false,
+        started: Date = Date(timeIntervalSince1970: 100),
+        updated: Date = Date(timeIntervalSince1970: 140)
+    ) -> AgentRunActivityAttributes.ContentState {
+        var state = AgentRunActivityAttributes.ContentState(
+            sessionID: "bot-key",
+            sessionTitle: "Inbox Triage",
+            status: status,
+            currentActivity: currentActivity,
+            responseExcerpt: excerpt,
+            startedAt: started,
+            updatedAt: updated,
+            isStale: isStale,
+            isFinal: isFinal,
+            errorSummary: errorSummary
+        )
+        state.chips = chips
+        return state
+    }
+
+    private func decodedActivity(_ data: Data) throws -> AgentRunActivityAttributes.ContentState {
+        try JSONDecoder().decode(AgentRunActivityAttributes.ContentState.self, from: data)
+    }
 }
 
 @MainActor private final class BotLiveActivitySpy: AgentLiveActivityManaging {

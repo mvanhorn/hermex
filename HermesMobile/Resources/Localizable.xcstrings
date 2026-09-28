@@ -68097,6 +68097,112 @@
     },
     "Open media video %@" : { "localizations" : { "de" : { "stringUnit" : { "state" : "needs_review", "value" : "Video %@ öffnen" } }, "es" : { "stringUnit" : { "state" : "needs_review", "value" : "Abrir vídeo %@" } }, "fr" : { "stringUnit" : { "state" : "needs_review", "value" : "Ouvrir la vidéo %@" } }, "it" : { "stringUnit" : { "state" : "needs_review", "value" : "Apri video %@" } }, "pl" : { "stringUnit" : { "state" : "needs_review", "value" : "Otwórz wideo %@" } }, "pt-BR" : { "stringUnit" : { "state" : "needs_review", "value" : "Abrir vídeo %@" } }, "nl" : { "stringUnit" : { "state" : "needs_review", "value" : "Video %@ openen" } }, "tr" : { "stringUnit" : { "state" : "needs_review", "value" : "Videoyu aç: %@" } }, "ru" : { "stringUnit" : { "state" : "needs_review", "value" : "Открыть видео %@" } }, "ja" : { "stringUnit" : { "state" : "needs_review", "value" : "ビデオ %@ を開く" } }, "zh-Hans" : { "stringUnit" : { "state" : "needs_review", "value" : "打开媒体视频 %@" } }, "ko" : { "stringUnit" : { "state" : "needs_review", "value" : "동영상 %@ 열기" } }, "ar" : { "stringUnit" : { "state" : "needs_review", "value" : "فتح فيديو الوسائط %@" } }, "he" : { "stringUnit" : { "state" : "needs_review", "value" : "פתיחת סרטון המדיה %@" } }, "ur" : { "stringUnit" : { "state" : "needs_review", "value" : "میڈیا ویڈیو %@ کھولیں" } }, "zh-Hant" : { "stringUnit" : { "state" : "needs_review", "value" : "開啟媒體影片 %@" } }, "zh-HK" : { "stringUnit" : { "state" : "needs_review", "value" : "開啟媒體影片 %@" } } } },
     "Open this bot’s chat in Hermes Desktop, then refresh." : { "localizations" : { "de" : { "stringUnit" : { "state" : "needs_review", "value" : "Öffne den Chat dieses Bots in Hermes Desktop und aktualisiere dann." } }, "es" : { "stringUnit" : { "state" : "needs_review", "value" : "Abre el chat de este bot en Hermes Desktop y luego actualiza." } }, "fr" : { "stringUnit" : { "state" : "needs_review", "value" : "Ouvrez la discussion de ce bot dans Hermes Desktop, puis actualisez." } }, "it" : { "stringUnit" : { "state" : "needs_review", "value" : "Apri la chat di questo bot in Hermes Desktop, poi aggiorna." } }, "pl" : { "stringUnit" : { "state" : "needs_review", "value" : "Otwórz czat tego bota w Hermes Desktop, a następnie odśwież." } }, "pt-BR" : { "stringUnit" : { "state" : "needs_review", "value" : "Abra o chat deste bot no Hermes Desktop e atualize." } }, "nl" : { "stringUnit" : { "state" : "needs_review", "value" : "Open de chat van deze bot in Hermes Desktop en vernieuw daarna." } }, "tr" : { "stringUnit" : { "state" : "needs_review", "value" : "Bu botun sohbetini Hermes Desktop’ta açın, ardından yenileyin." } }, "ru" : { "stringUnit" : { "state" : "needs_review", "value" : "Откройте чат этого бота в Hermes Desktop, затем обновите." } }, "ja" : { "stringUnit" : { "state" : "needs_review", "value" : "Hermes Desktopでこのボットのチャットを開いてから、更新してください。" } }, "zh-Hans" : { "stringUnit" : { "state" : "needs_review", "value" : "请在 Hermes Desktop 中打开此机器人的聊天，然后刷新。" } }, "ko" : { "stringUnit" : { "state" : "needs_review", "value" : "Hermes Desktop에서 이 봇의 채팅을 연 후 새로 고치세요." } }, "ar" : { "stringUnit" : { "state" : "needs_review", "value" : "افتح دردشة هذا الروبوت في Hermes Desktop، ثم حدّث." } }, "he" : { "stringUnit" : { "state" : "needs_review", "value" : "יש לפתוח את הצ׳אט של הבוט הזה ב‑Hermes Desktop ואז לרענן." } }, "ur" : { "stringUnit" : { "state" : "needs_review", "value" : "اس بوٹ کی چیٹ Hermes Desktop میں کھولیں، پھر ریفریش کریں۔" } }, "zh-Hant" : { "stringUnit" : { "state" : "needs_review", "value" : "請在 Hermes Desktop 中開啟此機器人的聊天，然後重新整理。" } }, "zh-HK" : { "stringUnit" : { "state" : "needs_review", "value" : "請在 Hermes Desktop 中開啟此機械人的聊天，然後重新整理。" } } } },
+    "Open to answer" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "افتح للإجابة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zum Antworten öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abre para responder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ouvrir pour répondre"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "פתח כדי לענות"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Apri per rispondere"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "開いて回答"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "열어서 답변하기"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Open om te antwoorden"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Otwórz, aby odpowiedzieć"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abra para responder"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Откройте для ответа"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Yanıtlamak için aç"
+          }
+        },
+        "ur" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "جواب دینے کے لیے کھولیں"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "開啟以回答"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "打开以回答"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "開啟以回答"
+          }
+        }
+      }
+    },
     "Open to read the reply" : {"localizations" : {"de" : {"stringUnit" : {"state" : "needs_review", "value" : "Öffnen, um die Antwort zu lesen"}}, "es" : {"stringUnit" : {"state" : "needs_review", "value" : "Abre para leer la respuesta"}}, "fr" : {"stringUnit" : {"state" : "needs_review", "value" : "Ouvrez pour lire la réponse"}}, "it" : {"stringUnit" : {"state" : "needs_review", "value" : "Apri per leggere la risposta"}}, "pl" : {"stringUnit" : {"state" : "needs_review", "value" : "Otwórz, aby przeczytać odpowiedź"}}, "pt-BR" : {"stringUnit" : {"state" : "needs_review", "value" : "Abra para ler a resposta"}}, "nl" : {"stringUnit" : {"state" : "needs_review", "value" : "Open om het antwoord te lezen"}}, "tr" : {"stringUnit" : {"state" : "needs_review", "value" : "Yanıtı okumak için açın"}}, "ru" : {"stringUnit" : {"state" : "needs_review", "value" : "Откройте, чтобы прочитать ответ"}}, "ja" : {"stringUnit" : {"state" : "needs_review", "value" : "開いて返信を読む"}}, "zh-Hans" : {"stringUnit" : {"state" : "needs_review", "value" : "打开以阅读回复"}}, "ko" : {"stringUnit" : {"state" : "needs_review", "value" : "열어서 답장 읽기"}}, "ar" : {"stringUnit" : {"state" : "needs_review", "value" : "افتح لقراءة الرد"}}, "he" : {"stringUnit" : {"state" : "needs_review", "value" : "פתחו כדי לקרוא את התשובה"}}, "ur" : {"stringUnit" : {"state" : "needs_review", "value" : "جواب پڑھنے کے لیے کھولیں"}}, "zh-Hant" : {"stringUnit" : {"state" : "needs_review", "value" : "開啟以閱讀回覆"}}, "zh-HK" : {"stringUnit" : {"state" : "needs_review", "value" : "開啟以閱讀回覆"}}}},
     "Open to reconnect" : {
       "localizations" : {
